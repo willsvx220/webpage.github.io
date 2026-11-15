@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hugo's HTML Superpowers Playground 🚀</title>
+    <!-- Tailwind CSS for crisp, responsive developer playground styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono for code blocks -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e2e',
+                            950: '#090d16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS strictly to enhance native HTML elements (::backdrop, <details> animation, <meter>, <progress>, [popover]) -->
+    <style>
+        /* Custom Native Dialog Backdrop & Entrance Animation */
+        dialog {
+            transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 0;
+            transform: scale(0.92) translateY(10px);
+        }
+        dialog[open] {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        dialog::backdrop {
+            background: rgba(9, 13, 22, 0.78);
+            backdrop-filter: blur(8px);
+            animation: fadeInBackdrop 0.25s ease forwards;
+        }
+        @keyframes fadeInBackdrop {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Custom Native Details/Summary Accordion */
+        details > summary {
+            list-style: none;
+        }
+        details > summary::-webkit-details-marker {
+            display: none;
+        }
+        details[open] .chevron-icon {
+            transform: rotate(180deg);
+        }
+        details[open] .details-content {
+            animation: slideDown 0.25s ease-out;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Native Popover API Transitions */
+        [popover] {
+            margin: 0;
+            inset: auto;
+            transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        [popover]:popover-open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        @starting-style {
+            [popover]:popover-open {
+                opacity: 0;
+                transform: translateY(-8px) scale(0.96);
+            }
+        }
+
+        /* Native <meter> and <progress> styling tweaks */
+        progress, meter {
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 14px;
+            width: 100%;
+        }
+        progress::-webkit-progress-bar {
+            background-color: #1e293b;
+            border-radius: 9999px;
+        }
+        progress::-webkit-progress-value {
+            background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+            border-radius: 9999px;
+            transition: width 0.3s ease;
+        }
+
+        /* Native <kbd> 3D keycap effect */
+        kbd {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            font-weight: 700;
+            line-height: 1.2;
+            color: #f8fafc;
+            background-color: #1e293b;
+            border: 1px solid #475569;
+            border-bottom-width: 3px;
+            border-radius: 0.45rem;
+            box-shadow: 0 2px 0 #0f172a;
+            transition: transform 0.08s ease, border-bottom-width 0.08s ease;
+            user-select: none;
+        }
+        kbd:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+        }
+
+        /* Custom subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-fuchsia-500 selection:text-white min-h-screen overflow-x-hidden">
+
+    <!-- Toast Notification Banner (Replaces alert() for copy confirmations) -->
+    <div id="toast-banner" class="fixed bottom-5 right-5 z-50 pointer-events-none opacity-0 translate-y-3 transition-all duration-300 flex items-center gap-2.5 bg-emerald-500 text-slate-950 font-bold px-4 py-3 rounded-xl shadow-2xl shadow-emerald-500/20">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        <span id="toast-message">Copied HTML snippet to clipboard!</span>
+    </div>
+
+    <!-- Top Navigation & Hero Header -->
+    <header class="relative border-b border-slate-800/80 bg-gradient-to-b from-slate-900 to-slate-950 pt-10 pb-12 px-4 sm:px-6 lg:px-8">
+        <!-- Decorative background glow -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-24 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -top-12 right-1/4 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="relative max-w-6xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-semibold tracking-wide">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                    HTML5 SECRET LAB • EDITION FOR HUGO
+                </div>
+                <div class="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-xl">
+                    <span>Zero Heavy Frameworks</span>
+                    <span class="text-slate-600">•</span>
+                    <span class="text-emerald-400">100% Pure Browser Magic</span>
+                </div>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-4">
+                Hey Hugo! Welcome to Your <span class="bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-300 bg-clip-text text-transparent">HTML Superpowers</span> Playground 🚀
+            </h1>
+            <p class="text-slate-300 text-base sm:text-lg max-w-3xl leading-relaxed mb-6">
+                Did you know HTML has built-in secret tags that can create popups, accordions, color pickers, autocomplete search bars, and editable pages <strong class="text-white">without needing complicated JavaScript libraries</strong>? Play with the live widgets on the left, and peek <span class="text-cyan-400 font-mono font-semibold">"Under the Hood"</span> on the right!
+            </p>
+
+            <!-- Quick Jump Pills -->
+            <nav aria-label="Section navigation" class="flex flex-wrap gap-2">
+                <a href="#trick-dialog" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs sm:text-sm font-medium text-cyan-300 transition">1. &lt;dialog&gt; Modals</a>
+                <a href="#trick-details" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs sm:text-sm font-medium text-fuchsia-300 transition">2. &lt;details&gt; Accordions</a>
+                <a href="#trick-popover" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs sm:text-sm font-medium text-amber-300 transition">3. Zero-JS Popovers</a>
+                <a href="#trick-forms" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs sm:text-sm font-medium text-emerald-300 transition">4. Smart Inputs &amp; Meters</a>
+                <a href="#trick-semantic" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs sm:text-sm font-medium text-violet-300 transition">5. Text &amp; Ruby Tricks</a>
+                <a href="#trick-editable" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-xs sm:text-sm font-medium text-rose-300 transition">6. Live Editable Page</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Playground Grid -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+
+        <!-- ===================================================================== -->
+        <!-- TRICK 1: NATIVE <dialog> MODAL                                        -->
+        <!-- ===================================================================== -->
+        <section id="trick-dialog" class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-wider text-cyan-400 font-bold">Trick #01 • Native Overlay</span>
+                    <h2 class="text-2xl font-bold text-white mt-0.5">The Built-In <code class="text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded-lg">&lt;dialog&gt;</code> Modal</h2>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-medium">Press ESC to close automatically!</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <!-- Interactive Playground Side -->
+                <div class="lg:col-span-6 bg-slate-950/80 border border-slate-800/90 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-5">
+                            Browsers have a native <code class="text-cyan-300">&lt;dialog&gt;</code> tag! When you call <code class="text-amber-300">.showModal()</code>, the browser automatically blurs the background using <code class="text-fuchsia-300">::backdrop</code>, traps your keyboard focus inside, and lets you close it with the <kbd>Esc</kbd> key!
+                        </p>
+                        
+                        <div class="p-5 rounded-2xl bg-gradient-to-br from-cyan-950/40 to-slate-900 border border-cyan-500/20 text-center space-y-4">
+                            <div class="text-4xl">🛸</div>
+                            <h3 class="font-bold text-white">Secret Mission Briefing</h3>
+                            <button 
+                                onclick="document.getElementById('hugo-secret-dialog').showModal()" 
+                                class="w-full sm:w-auto px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-sm shadow-lg shadow-cyan-500/25 transition transform active:scale-95 cursor-pointer">
+                                Launch Native &lt;dialog&gt;
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="text-xs text-slate-400 mt-4 flex items-center gap-2">
+                        <span class="text-cyan-400">💡 Pro Tip:</span> Notice how you can't accidentally click buttons behind the modal while it's open!
+                    </p>
+                </div>
+
+                <!-- Under the Hood Code Side -->
+                <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800">
+                        <span class="text-xs font-mono text-slate-400 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Under the Hood: modal.html
+                        </span>
+                        <button onclick="copySnippet('code-dialog')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-cyan-300 transition cursor-pointer">
+                            Copy HTML
+                        </button>
+                    </div>
+                    <pre id="code-dialog" class="p-4 text-xs sm:text-sm font-mono text-slate-200 overflow-x-auto leading-relaxed flex-1"><code>&lt;!-- 1. Define the hidden native dialog --&gt;
+&lt;dialog id="myDialog"&gt;
+  &lt;h3&gt;Hello Hugo! 👋&lt;/h3&gt;
+  &lt;p&gt;I am a native browser modal!&lt;/p&gt;
+  
+  &lt;!-- method="dialog" closes it with ZERO JS! --&gt;
+  &lt;form method="dialog"&gt;
+    &lt;button&gt;Close Mission&lt;/button&gt;
+  &lt;/form&gt;
+&lt;/dialog&gt;
+
+&lt;!-- 2. Open it with one line --&gt;
+&lt;button onclick="myDialog.showModal()"&gt;
+  Open Modal
+&lt;/button&gt;</code></pre>
+                </div>
+            </div>
+
+            <!-- The Actual Native Dialog Element -->
+            <dialog id="hugo-secret-dialog" class="bg-slate-900 text-slate-100 border-2 border-cyan-500/50 rounded-3xl p-6 sm:p-8 max-w-md w-[92vw] shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold">TOP SECRET • AGENT HUGO</span>
+                    <span class="text-2xl">🕵️‍♂️</span>
+                </div>
+                <h3 class="text-2xl font-extrabold text-white mb-2">You Unlocked &lt;dialog&gt;!</h3>
+                <p class="text-slate-300 text-sm leading-relaxed mb-5">
+                    Look at the blurred background behind this box—that's styled using the pure CSS <code class="text-fuchsia-300 font-mono">dialog::backdrop</code> pseudo-element! And the button below uses <code class="text-amber-300 font-mono">&lt;form method="dialog"&gt;</code> to close this window without a single line of JavaScript.
+                </p>
+                <form method="dialog" class="flex justify-end gap-3">
+                    <button class="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-sm transition cursor-pointer">
+                        Awesome, Close Dialog!
+                    </button>
+                </form>
+            </dialog>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TRICK 2: NATIVE <details> & <summary> ACCORDIONS                      -->
+        <!-- ===================================================================== -->
+        <section id="trick-details" class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-wider text-fuchsia-400 font-bold">Trick #02 • Zero-JavaScript UI</span>
+                    <h2 class="text-2xl font-bold text-white mt-0.5">Instant Accordions with <code class="text-fuchsia-300 bg-fuchsia-950/60 px-2 py-0.5 rounded-lg">&lt;details&gt;</code> &amp; <code class="text-fuchsia-300 bg-fuchsia-950/60 px-2 py-0.5 rounded-lg">&lt;summary&gt;</code></h2>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 text-xs font-medium">0 Lines of JavaScript</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <!-- Interactive Playground Side -->
+                <div class="lg:col-span-6 bg-slate-950/80 border border-slate-800/90 rounded-2xl p-6 space-y-3">
+                    <p class="text-slate-300 text-sm mb-4">
+                        Click the secret drawers below! Bonus trick: because all three share the same <code class="text-amber-300">name="hugo-accordion"</code> attribute, opening one automatically closes the others!
+                    </p>
+
+                    <details name="hugo-accordion" open class="group bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                        <summary class="flex items-center justify-between p-4 cursor-pointer font-semibold text-white hover:bg-slate-800/60 transition select-none">
+                            <span class="flex items-center gap-2.5">
+                                <span class="text-lg">🦖</span> Why is HTML called a "Markup" language?
+                            </span>
+                            <svg class="chevron-icon w-5 h-5 text-fuchsia-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="details-content px-4 pb-4 pt-1 text-sm text-slate-300 border-t border-slate-800/60">
+                            HTML stands for <strong class="text-fuchsia-300">HyperText Markup Language</strong>. Instead of doing math like Python or JavaScript, HTML wraps text in tags (like <code class="text-cyan-300">&lt;h1&gt;</code> or <code class="text-cyan-300">&lt;button&gt;</code>) to tell the browser what each piece of content <em>is</em>!
+                        </div>
+                    </details>
+
+                    <details name="hugo-accordion" class="group bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                        <summary class="flex items-center justify-between p-4 cursor-pointer font-semibold text-white hover:bg-slate-800/60 transition select-none">
+                            <span class="flex items-center gap-2.5">
+                                <span class="text-lg">⚡</span> How does the exclusive accordion trick work?
+                            </span>
+                            <svg class="chevron-icon w-5 h-5 text-fuchsia-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="details-content px-4 pb-4 pt-1 text-sm text-slate-300 border-t border-slate-800/60">
+                            Modern browsers added the <code class="text-amber-300">name="..."</code> attribute to <code class="text-fuchsia-300">&lt;details&gt;</code>! Just like radio buttons, any <code class="text-fuchsia-300">&lt;details&gt;</code> tags with the same <code class="text-amber-300">name</code> automatically team up so only one stays open at a time.
+                        </div>
+                    </details>
+
+                    <details name="hugo-accordion" class="group bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+                        <summary class="flex items-center justify-between p-4 cursor-pointer font-semibold text-white hover:bg-slate-800/60 transition select-none">
+                            <span class="flex items-center gap-2.5">
+                                <span class="text-lg">🏆</span> Secret Trophy Inside!
+                            </span>
+                            <svg class="chevron-icon w-5 h-5 text-fuchsia-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                        </summary>
+                        <div class="details-content px-4 pb-4 pt-1 text-sm text-emerald-300 border-t border-slate-800/60 font-medium">
+                            🎉 Boom! You found the hidden trophy without a single <code class="text-white">onClick</code> listener!
+                        </div>
+                    </details>
+                </div>
+
+                <!-- Under the Hood Code Side -->
+                <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800">
+                        <span class="text-xs font-mono text-slate-400 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Under the Hood: accordion.html
+                        </span>
+                        <button onclick="copySnippet('code-details')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-fuchsia-300 transition cursor-pointer">
+                            Copy HTML
+                        </button>
+                    </div>
+                    <pre id="code-details" class="p-4 text-xs sm:text-sm font-mono text-slate-200 overflow-x-auto leading-relaxed flex-1"><code>&lt;!-- Add "open" to start expanded --&gt;
+&lt;details name="faq" open&gt;
+  &lt;summary&gt;Click me to toggle!&lt;/summary&gt;
+  &lt;p&gt;Hidden secret content revealed!&lt;/p&gt;
+&lt;/details&gt;
+
+&lt;!-- Same name="faq" auto-closes the first! --&gt;
+&lt;details name="faq"&gt;
+  &lt;summary&gt;Second Drawer&lt;/summary&gt;
+  &lt;p&gt;Only one stays open at a time!&lt;/p&gt;
+&lt;/details&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TRICK 3: NATIVE POPOVER API (NO JAVASCRIPT!)                          -->
+        <!-- ===================================================================== -->
+        <section id="trick-popover" class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-wider text-amber-400 font-bold">Trick #03 • Brand-New Browser Superpower</span>
+                    <h2 class="text-2xl font-bold text-white mt-0.5">The Native <code class="text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded-lg">popover</code> API</h2>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium">Light-Dismiss Built In</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <!-- Interactive Playground Side -->
+                <div class="lg:col-span-6 bg-slate-950/80 border border-slate-800/90 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-5">
+                            Want a floating tooltip, menu, or toast card that closes automatically when you click anywhere outside of it ("light-dismiss")? Just give any <code class="text-amber-300">&lt;div&gt;</code> the <code class="text-amber-300">popover</code> attribute and link a button with <code class="text-cyan-300">popovertarget</code>!
+                        </p>
+
+                        <div class="flex flex-wrap gap-3 items-center justify-center p-6 rounded-2xl bg-slate-900 border border-slate-800">
+                            <button 
+                                popovertarget="hugo-pop-card" 
+                                class="px-5 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-sm shadow-lg shadow-amber-500/20 transition transform active:scale-95 cursor-pointer">
+                                ✨ Toggle Floating Popover
+                            </button>
+
+                            <button 
+                                popovertarget="hugo-manual-pop" 
+                                popovertargetaction="show"
+                                class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-200 font-semibold text-sm transition cursor-pointer">
+                                📌 Open Sticky Note
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Auto Light-Dismiss Popover -->
+                    <div id="hugo-pop-card" popover class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border-2 border-amber-400 text-slate-100 p-6 rounded-2xl shadow-2xl max-w-sm w-[90vw]">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="text-2xl">🎈</span>
+                            <h3 class="font-bold text-lg text-amber-300">Zero-JS Popover!</h3>
+                        </div>
+                        <p class="text-sm text-slate-300 mb-4">
+                            I float in the browser's <strong>Top Layer</strong> (above every z-index!). Click anywhere outside me or press <kbd>Esc</kbd> and I disappear automatically!
+                        </p>
+                        <button popovertarget="hugo-pop-card" popovertargetaction="hide" class="w-full py-2 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 font-semibold text-xs transition cursor-pointer">
+                            Close Me
+                        </button>
+                    </div>
+
+                    <!-- Manual Popover (Won't close on outside click!) -->
+                    <div id="hugo-manual-pop" popover="manual" class="fixed bottom-6 left-6 bg-gradient-to-br from-amber-300 to-yellow-400 text-slate-950 p-5 rounded-2xl shadow-2xl max-w-xs border-2 border-amber-100">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="font-extrabold text-sm">📌 Sticky Note (manual)</span>
+                            <button popovertarget="hugo-manual-pop" popovertargetaction="hide" class="w-6 h-6 rounded-full bg-slate-950/15 hover:bg-slate-950/25 font-bold text-xs flex items-center justify-center cursor-pointer">✕</button>
+                        </div>
+                        <p class="text-xs font-medium leading-relaxed">
+                            Because I use <code class="bg-slate-950/10 px-1 rounded">popover="manual"</code>, clicking outside won't close me—only my ✕ button can!
+                        </p>
+                    </div>
+
+                    <p class="text-xs text-slate-400 mt-4">
+                        <span class="text-amber-400">⚡ Cool Fact:</span> Popovers render in the browser's <em>Top Layer</em>, so you never have to fight with <code class="text-slate-200">z-index: 999999</code> ever again!
+                    </p>
+                </div>
+
+                <!-- Under the Hood Code Side -->
+                <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800">
+                        <span class="text-xs font-mono text-slate-400 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Under the Hood: popover.html
+                        </span>
+                        <button onclick="copySnippet('code-popover')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-amber-300 transition cursor-pointer">
+                            Copy HTML
+                        </button>
+                    </div>
+                    <pre id="code-popover" class="p-4 text-xs sm:text-sm font-mono text-slate-200 overflow-x-auto leading-relaxed flex-1"><code>&lt;!-- Button points to the popover's ID --&gt;
+&lt;button popovertarget="secret-tip"&gt;
+  Toggle Popover
+&lt;/button&gt;
+
+&lt;!-- Add "popover" attribute to any box --&gt;
+&lt;div id="secret-tip" popover&gt;
+  🎈 Click outside me to auto-close!
+&lt;/div&gt;
+
+&lt;!-- Or use popover="manual" to stay pinned --&gt;
+&lt;div id="sticky" popover="manual"&gt;...&lt;/div&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TRICK 4: SMART INTERACTIVE INPUTS, DATALIST, METER & PROGRESS         -->
+        <!-- ===================================================================== -->
+        <section id="trick-forms" class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-wider text-emerald-400 font-bold">Trick #04 • Built-In Widgets</span>
+                    <h2 class="text-2xl font-bold text-white mt-0.5">Smart Inputs, <code class="text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-lg">&lt;datalist&gt;</code>, <code class="text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-lg">&lt;meter&gt;</code> &amp; <code class="text-emerald-300 bg-emerald-950/60 px-2 py-0.5 rounded-lg">&lt;progress&gt;</code></h2>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-medium">Native Controls</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <!-- Interactive Playground Side -->
+                <div class="lg:col-span-6 bg-slate-950/80 border border-slate-800/90 rounded-2xl p-6 space-y-5">
+                    
+                    <!-- 1. Native Color Picker & Range Slider -->
+                    <div id="color-preview-card" class="p-4 rounded-2xl border-2 border-emerald-500/40 bg-slate-900 transition-colors duration-200">
+                        <div class="flex flex-wrap items-center justify-between gap-4 mb-3">
+                            <label for="hugo-color" class="text-sm font-bold text-white flex items-center gap-2 cursor-pointer">
+                                🎨 Pick Accent Color:
+                                <input type="color" id="hugo-color" value="#10b981" oninput="updateDashboardDemo()" class="w-9 h-9 rounded-lg cursor-pointer bg-transparent border-0">
+                            </label>
+                            <span id="color-hex-badge" class="font-mono text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-emerald-300">#10b981</span>
+                        </div>
+
+                        <!-- Range Slider -> Drives <meter> and <progress> -->
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between text-xs font-mono">
+                                <label for="hugo-power-range" class="text-slate-300">⚡ Reactor Power Slider:</label>
+                                <span id="power-val-label" class="text-emerald-400 font-bold">72%</span>
+                            </div>
+                            <input type="range" id="hugo-power-range" min="0" max="100" value="72" oninput="updateDashboardDemo()" class="w-full accent-emerald-400 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <!-- 2. Native <meter> vs <progress> -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="font-mono text-slate-300">&lt;meter&gt; (Smart Gauge)</span>
+                                <span id="meter-status" class="text-emerald-400 font-semibold">Optimal</span>
+                            </div>
+                            <!-- Meter automatically turns green/yellow/red based on low/high/optimum! -->
+                            <meter id="hugo-meter" min="0" max="100" low="30" high="80" optimum="70" value="72"></meter>
+                            <p class="text-[11px] text-slate-400 mt-1.5">Auto-changes color if too low (&lt;30) or too high (&gt;80)!</p>
+                        </div>
+
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="font-mono text-slate-300">&lt;progress&gt; (Task Bar)</span>
+                                <span id="progress-pct" class="text-cyan-400 font-semibold">72%</span>
+                            </div>
+                            <progress id="hugo-progress" max="100" value="72"></progress>
+                            <p class="text-[11px] text-slate-400 mt-1.5">Great for downloads, XP levels, or loading quests!</p>
+                        </div>
+                    </div>
+
+                    <!-- 3. Native <datalist> Autocomplete -->
+                    <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                        <label for="hugo-planet-input" class="block text-xs font-mono text-emerald-300 mb-1.5">
+                            🔭 Native &lt;datalist&gt; Autocomplete (Type or click arrow):
+                        </label>
+                        <input 
+                            list="solar-destinations" 
+                            id="hugo-planet-input" 
+                            placeholder="Choose a destination (e.g., Saturn, Cybertron...)" 
+                            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-700 focus:border-emerald-400 focus:outline-none text-sm text-white placeholder-slate-500">
+                        <datalist id="solar-destinations">
+                            <option value="🪐 Saturn Rings Outpost">
+                            <option value="🌕 Moon Base Alpha">
+                            <option value="🔴 Mars Olympus Mons">
+                            <option value="🌌 Andromeda Galaxy">
+                            <option value="🏝️ Secret Code Island">
+                        </datalist>
+                    </div>
+                </div>
+
+                <!-- Under the Hood Code Side -->
+                <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800">
+                        <span class="text-xs font-mono text-slate-400 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Under the Hood: smart-inputs.html
+                        </span>
+                        <button onclick="copySnippet('code-forms')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-emerald-300 transition cursor-pointer">
+                            Copy HTML
+                        </button>
+                    </div>
+                    <pre id="code-forms" class="p-4 text-xs sm:text-sm font-mono text-slate-200 overflow-x-auto leading-relaxed flex-1"><code>&lt;!-- Native Color Picker &amp; Slider --&gt;
+&lt;input type="color" value="#10b981"&gt;
+&lt;input type="range" min="0" max="100" value="72"&gt;
+
+&lt;!-- Smart Meter changes color by thresholds! --&gt;
+&lt;meter min="0" max="100" low="30" high="80" 
+       optimum="70" value="72"&gt;&lt;/meter&gt;
+
+&lt;!-- Progress Bar --&gt;
+&lt;progress max="100" value="72"&gt;&lt;/progress&gt;
+
+&lt;!-- Zero-JS Autocomplete Dropdown --&gt;
+&lt;input list="planets" placeholder="Pick planet..."&gt;
+&lt;datalist id="planets"&gt;
+  &lt;option value="🪐 Saturn"&gt;
+  &lt;option value="🔴 Mars"&gt;
+&lt;/datalist&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TRICK 5: SEMANTIC TEXT TRICKS (<mark>, <kbd>, <abbr>, <ruby>, <marquee>) -->
+        <!-- ===================================================================== -->
+        <section id="trick-semantic" class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-wider text-violet-400 font-bold">Trick #05 • Typography &amp; Retro Gems</span>
+                    <h2 class="text-2xl font-bold text-white mt-0.5">Secret Text Tags: <code class="text-violet-300 bg-violet-950/60 px-2 py-0.5 rounded-lg">&lt;ruby&gt;</code>, <code class="text-violet-300 bg-violet-950/60 px-2 py-0.5 rounded-lg">&lt;kbd&gt;</code>, <code class="text-violet-300 bg-violet-950/60 px-2 py-0.5 rounded-lg">&lt;mark&gt;</code> &amp; <code class="text-violet-300 bg-violet-950/60 px-2 py-0.5 rounded-lg">&lt;abbr&gt;</code></h2>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/30 text-violet-300 text-xs font-medium">Pure HTML Semantics</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <!-- Interactive Playground Side -->
+                <div class="lg:col-span-6 bg-slate-950/80 border border-slate-800/90 rounded-2xl p-6 space-y-4">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- <mark> tag -->
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                            <span class="text-xs font-mono text-violet-400 block mb-1">&lt;mark&gt; Highlighter</span>
+                            <p class="text-sm text-slate-200">
+                                Use <mark class="bg-amber-300 text-slate-950 px-1.5 py-0.5 rounded font-bold">&lt;mark&gt;</mark> to highlight crucial clues!
+                            </p>
+                        </div>
+
+                        <!-- <abbr> tag -->
+                        <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+                            <span class="text-xs font-mono text-violet-400 block mb-1">&lt;abbr&gt; Hover Tooltip</span>
+                            <p class="text-sm text-slate-200">
+                                Hover over <abbr title="HyperText Markup Language — The skeleton of the web!" class="underline decoration-dotted decoration-cyan-400 text-cyan-300 font-bold cursor-help">HTML</abbr> or <abbr title="Cascading Style Sheets — The paint and style of the web!" class="underline decoration-dotted decoration-fuchsia-400 text-fuchsia-300 font-bold cursor-help">CSS</abbr>!
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- <kbd> Keyboard Keys -->
+                    <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs font-mono text-violet-400 block mb-1">&lt;kbd&gt; Interactive Keycaps</span>
+                            <p class="text-sm text-slate-300">Click the keys or press combo:</p>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <kbd class="cursor-pointer">Ctrl</kbd>
+                            <span class="text-slate-500">+</span>
+                            <kbd class="cursor-pointer">Shift</kbd>
+                            <span class="text-slate-500">+</span>
+                            <kbd class="cursor-pointer">I</kbd>
+                        </div>
+                    </div>
+
+                    <!-- <ruby> & <rt> Ruby Annotations -->
+                    <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+                        <span class="text-xs font-mono text-violet-400 block mb-2">&lt;ruby&gt; + &lt;rt&gt; Floating Annotations</span>
+                        <div class="text-xl sm:text-2xl font-bold text-white tracking-wide flex flex-wrap items-center gap-6">
+                            <ruby class="text-cyan-300">
+                                忍者 <rt class="text-xs font-mono text-amber-300 font-normal">Ninja (Shinobi)</rt>
+                            </ruby>
+                            <ruby class="text-fuchsia-300">
+                                &lt;HTML5&gt; <rt class="text-xs font-mono text-emerald-300 font-normal">Superpower</rt>
+                            </ruby>
+                            <ruby class="text-amber-300">
+                                Hugo <rt class="text-xs font-mono text-cyan-300 font-normal">Code Master</rt>
+                            </ruby>
+                        </div>
+                    </div>
+
+                    <!-- Classic Retro <marquee> Easter Egg -->
+                    <div class="p-2.5 rounded-xl bg-gradient-to-r from-violet-950/80 via-fuchsia-950/80 to-cyan-950/80 border border-violet-500/30">
+                        <marquee behavior="scroll" direction="left" scrollamount="6" class="text-xs font-mono font-bold text-amber-300">
+                            🕹️ RETRO EASTER EGG: The classic &lt;marquee&gt; tag scrolls text across the screen without a single line of CSS animation or JS! 🚀 Keep coding, Hugo! 🌟
+                        </marquee>
+                    </div>
+                </div>
+
+                <!-- Under the Hood Code Side -->
+                <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800">
+                        <span class="text-xs font-mono text-slate-400 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Under the Hood: text-magic.html
+                        </span>
+                        <button onclick="copySnippet('code-semantic')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-violet-300 transition cursor-pointer">
+                            Copy HTML
+                        </button>
+                    </div>
+                    <pre id="code-semantic" class="p-4 text-xs sm:text-sm font-mono text-slate-200 overflow-x-auto leading-relaxed flex-1"><code>&lt;!-- Highlighter Marker --&gt;
+&lt;p&gt;Find the &lt;mark&gt;hidden clue&lt;/mark&gt;!&lt;/p&gt;
+
+&lt;!-- Native Hover Tooltip --&gt;
+&lt;abbr title="HyperText Markup Language"&gt;HTML&lt;/abbr&gt;
+
+&lt;!-- Keyboard Shortcut Keys --&gt;
+&lt;kbd&gt;Ctrl&lt;/kbd&gt; + &lt;kbd&gt;Shift&lt;/kbd&gt; + &lt;kbd&gt;I&lt;/kbd&gt;
+
+&lt;!-- Ruby Top-Annotations --&gt;
+&lt;ruby&gt;
+  忍者 &lt;rt&gt;Ninja&lt;/rt&gt;
+&lt;/ruby&gt;
+
+&lt;!-- Classic 90s Retro Scroller --&gt;
+&lt;marquee&gt;🚀 Moving text in 1 tag!&lt;/marquee&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- TRICK 6: CONTENTEDITABLE PLAYGROUND                                   -->
+        <!-- ===================================================================== -->
+        <section id="trick-editable" class="bg-slate-900/70 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-6">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-wider text-rose-400 font-bold">Trick #06 • Instant Live Editor</span>
+                    <h2 class="text-2xl font-bold text-white mt-0.5">Turn Any Element Into a Word Processor with <code class="text-rose-300 bg-rose-950/60 px-2 py-0.5 rounded-lg">contenteditable="true"</code></h2>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-medium">Click &amp; Type Directly!</span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                <!-- Interactive Playground Side -->
+                <div class="lg:col-span-6 bg-slate-950/80 border border-slate-800/90 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="text-slate-300 text-sm">
+                                Click inside the glowing card below and rewrite it! You can even use <kbd>Ctrl</kbd>+<kbd>B</kbd> for bold or <kbd>Ctrl</kbd>+<kbd>I</kbd> for italic!
+                            </p>
+                        </div>
+
+                        <!-- Live Editable Card -->
+                        <div 
+                            id="hugo-editable-box"
+                            contenteditable="true" 
+                            spellcheck="false"
+                            class="p-5 rounded-2xl bg-gradient-to-br from-rose-950/40 via-slate-900 to-slate-900 border-2 border-dashed border-rose-500/50 focus:border-rose-400 focus:outline-none text-slate-100 space-y-2 min-h-[150px] transition">
+                            <h3 class="text-lg font-extrabold text-rose-300">✍️ Hugo's Hacker Manifesto</h3>
+                            <p class="text-sm text-slate-200 leading-relaxed">
+                                Click right here and edit this sentence! Because this <code class="text-amber-300">&lt;div&gt;</code> has <code class="text-rose-300">contenteditable="true"</code>, the browser lets you type, delete, and format text right on the webpage!
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 mt-4">
+                        <button onclick="resetEditableBox()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono text-slate-300 transition cursor-pointer">
+                            ↺ Reset Text
+                        </button>
+                        <button onclick="copyEditableText()" class="px-4 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold text-xs transition cursor-pointer">
+                            📋 Copy Your Edited Text
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Under the Hood Code Side -->
+                <div class="lg:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden flex flex-col">
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-slate-800">
+                        <span class="text-xs font-mono text-slate-400 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            Under the Hood: editable.html
+                        </span>
+                        <button onclick="copySnippet('code-editable')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-rose-300 transition cursor-pointer">
+                            Copy HTML
+                        </button>
+                    </div>
+                    <pre id="code-editable" class="p-4 text-xs sm:text-sm font-mono text-slate-200 overflow-x-auto leading-relaxed flex-1"><code>&lt;!-- One attribute makes ANY tag editable! --&gt;
+&lt;div contenteditable="true"&gt;
+  &lt;h3&gt;Hugo's Hacker Manifesto&lt;/h3&gt;
+  &lt;p&gt;Click me and start typing!&lt;/p&gt;
+&lt;/div&gt;
+
+&lt;!-- Bonus Secret: Open your browser console 
+     and type: document.designMode = 'on' 
+     to edit ANY website on the internet! --&gt;</code></pre>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer with Ultimate Browser Console Easter Egg -->
+    <footer class="border-t border-slate-800/80 bg-slate-900/40 py-8 px-4 sm:px-6 lg:px-8 mt-8">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+            <div>
+                <p class="text-sm font-semibold text-white">Built for Hugo's Web Dev Adventures 🚀</p>
+                <p class="text-xs text-slate-400 mt-1">
+                    Ultimate Secret: Press <kbd>F12</kbd> (or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd>), go to Console, and type <code class="text-cyan-300 font-mono">document.designMode = "on"</code> to edit the entire page!
+                </p>
+            </div>
+            <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-mono text-cyan-300 border border-slate-700 transition cursor-pointer">
+                ↑ Back to Top
+            </button>
+        </div>
+    </footer>
+
+    <!-- Minimal Helper Script ONLY for Live Input Readouts & Clipboard Copying -->
+    <script>
+        /**
+         * Updates the live <meter>, <progress>, and color accent preview
+         * when Hugo drags the range slider or picks a new color.
+         */
+        function updateDashboardDemo() {
+            try {
+                const colorInput = document.getElementById('hugo-color');
+                const rangeInput = document.getElementById('hugo-power-range');
+                const meterEl = document.getElementById('hugo-meter');
+                const progressEl = document.getElementById('hugo-progress');
+                const colorCard = document.getElementById('color-preview-card');
+                const hexBadge = document.getElementById('color-hex-badge');
+                const powerLabel = document.getElementById('power-val-label');
+                const progressPct = document.getElementById('progress-pct');
+                const meterStatus = document.getElementById('meter-status');
+
+                const selectedColor = colorInput.value;
+                const val = Number(rangeInput.value);
+
+                // Apply chosen color to border & badge
+                colorCard.style.borderColor = selectedColor;
+                hexBadge.textContent = selectedColor;
+                hexBadge.style.color = selectedColor;
+
+                // Update native <meter> and <progress> values
+                meterEl.value = val;
+                progressEl.value = val;
+                powerLabel.textContent = val + '%';
+                progressPct.textContent = val + '%';
+
+                // Reflect <meter> low/optimum/high zones
+                if (val < 30) {
+                    meterStatus.textContent = 'Low Power';
+                    meterStatus.className = 'text-amber-400 font-semibold';
+                } else if (val > 80) {
+                    meterStatus.textContent = 'Overload!';
+                    meterStatus.className = 'text-rose-400 font-semibold';
+                } else {
+                    meterStatus.textContent = 'Optimal';
+                    meterStatus.className = 'text-emerald-400 font-semibold';
+                }
+            } catch (err) {
+                console.error('Error updating dashboard demo:', err);
+            }
+        }
+
+        /**
+         * Copies code snippet text using execCommand('copy') for reliable iframe support
+         * and triggers a non-blocking toast notification.
+         */
+        function copySnippet(elementId) {
+            try {
+                const codeEl = document.getElementById(elementId);
+                if (!codeEl) return;
+
+                const textToCopy = codeEl.innerText;
+                copyTextToClipboard(textToCopy, 'Copied HTML code snippet!');
+            } catch (err) {
+                console.error('Copy failed:', err);
+            }
+        }
+
+        /**
+         * Copies Hugo's custom edited text from the contenteditable box.
+         */
+        function copyEditableText() {
+            try {
+                const box = document.getElementById('hugo-editable-box');
+                if (!box) return;
+                copyTextToClipboard(box.innerText, 'Copied your custom text!');
+            } catch (err) {
+                console.error('Copy editable failed:', err);
+            }
+        }
+
+        /**
+         * Resets the contenteditable card back to its original starter text.
+         */
+        function resetEditableBox() {
+            const box = document.getElementById('hugo-editable-box');
+            if (!box) return;
+            box.innerHTML = `
+                <h3 class="text-lg font-extrabold text-rose-300">✍️ Hugo's Hacker Manifesto</h3>
+                <p class="text-sm text-slate-200 leading-relaxed">
+                    Click right here and edit this sentence! Because this <code class="text-amber-300">&lt;div&gt;</code> has <code class="text-rose-300">contenteditable="true"</code>, the browser lets you type, delete, and format text right on the webpage!
+                </p>
+            `;
+            showToast('Editable box reset!');
+        }
+
+        /**
+         * Helper using a temporary textarea + document.execCommand('copy')
+         */
+        function copyTextToClipboard(text, message) {
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = text;
+            tempTextArea.style.position = 'fixed';
+            tempTextArea.style.left = '-9999px';
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            showToast(message);
+        }
+
+        let toastTimer = null;
+        function showToast(message) {
+            const toast = document.getElementById('toast-banner');
+            const msgSpan = document.getElementById('toast-message');
+            if (!toast || !msgSpan) return;
+
+            msgSpan.textContent = message;
+            toast.classList.remove('opacity-0', 'translate-y-3');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-3');
+            }, 2400);
+        }
+    </script>
+</body>
+</html>
